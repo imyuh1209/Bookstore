@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Spring Boot WebSocket Chat Application</title>
+    <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            max-width: 500px;
+            margin: 0 auto;
+            margin-top: 50px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .chat-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chat-area {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/books">Quản Lý Sách</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/books">Danh Sách Sách</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/chat">Chat Room</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="username-page" class="container mt-5 text-center">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2 class="chat-header">Type your username to enter the Chatroom</h2>
+                <form id="usernameForm" name="usernameForm">
+                    <div class="form-group mb-3">
+                        <input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary w-100">Start Chatting</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-page" class="container chat-container d-none">
+        <div class="chat-header">
+            <h2>Spring WebSocket Chat</h2>
+        </div>
+        <ul id="messageArea" class="list-unstyled chat-area">
+        </ul>
+        <form id="messageForm" name="messageForm">
+            <div class="input-group">
+                <input type="text" id="message" placeholder="Type a message..." autocomplete="off" class="form-control" />
+                <button type="submit" class="btn btn-primary">Send</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
+    <script>
+        'use strict';
+
+        var usernamePage = document.querySelector('#username-page');
+        var chatPage = document.querySelector('#chat-page');
+        var usernameForm = document.querySelector('#usernameForm');
+        var messageForm = document.querySelector('#messageForm');
+        var messageInput = document.querySelector('#message');
+        var messageArea = document.querySelector('#messageArea');
+        var connectingElement = document.querySelector('.connecting');
+
+        var stompClient = null;
+        var username = null;
+
+        var colors = [
+            '#2196F3', '#32c787', '#00BCD4', '#ff5652',
+            '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
+        ];
+
+        function connect(event) {
+            username = document.querySelector('#name').value.trim();
+
+            if(username) {
+                usernamePage.classList.add('d-none');
+                chatPage.classList.remove('d-none');
+
+                var socket = new SockJS('/ws');
+                stompClient = Stomp.over(socket);
+
+                stompClient.connect({}, onConnected, onError);
+            }
+            event.preventDefault();
+        }
+
+
+        function onConnected() {
+            // Subscribe to the Public Topic
+            stompClient.subscribe('/topic/public', onMessageReceived);
+
+            // Tell your username to the server
+            stompClient.send("/app/chat.addUser",
+                {},
+                JSON.stringify({sender: username, type: 'JOIN'})
+            );
+        }
+
+
+        function onError(error) {
+            alert('Could not connect to WebSocket server. Please refresh this page to try again!');
+        }
+
+
+        function sendMessage(event) {
+            var messageContent = messageInput.value.trim();
+            if(messageContent && stompClient) {
+                var chatMessage = {
+                    sender: username,
+                    content: messageInput.value,
+                    type: 'CHAT'
+                };
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+            event.preventDefault();
+        }
+
+
+        function onMessageReceived(payload) {
+            var message = JSON.parse(payload.body);
+
+            var messageElement = document.createElement('li');
+            messageElement.classList.add('message');
+
+            if(message.type === 'JOIN') {
+                messageElement.classList.add('event-message');
+                message.content = message.sender + ' joined!';
+                messageElement.innerHTML = '<div class="alert alert-info">' + message.content + '</div>';
+            } else if (message.type === 'LEAVE') {
+                messageElement.classList.add('event-message');
+                message.content = message.sender + ' left!';
+                messageElement.innerHTML = '<div class="alert alert-warning">' + message.content + '</div>';
+            } else {
+                messageElement.innerHTML = '<span>' + message.sender + ': </span>' + message.content;
+            }
+
+            messageArea.appendChild(messageElement);
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        usernameForm.addEventListener('submit', connect, true);
+        messageForm.addEventListener('submit', sendMessage, true);
+    </script>
+</body>
+</html>

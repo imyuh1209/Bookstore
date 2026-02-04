@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{book/layout :: layout(~{::body})}">
+<body>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Danh Sách Sách</h3>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <a href="/books/add" class="btn btn-primary">Thêm Sách Mới</a>
+                </div>
+                <div class="col-md-6">
+                    <form id="searchForm" class="d-flex">
+                        <input class="form-control me-2" type="search" id="searchInput" placeholder="Tìm kiếm sách..." aria-label="Search">
+                        <button class="btn btn-outline-success" type="submit">Tìm</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="alert-container"></div>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên Sách</th>
+                        <th>Tác Giả</th>
+                        <th>Giá</th>
+                        <th>Thể Loại</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="book-table-body">
+                    <!-- Data will be loaded via AJAX -->
+                </tbody>
+            </table>
+            
+            <!-- Hidden element to check admin role -->
+            <span id="isAdmin" sec:authorize="hasAnyAuthority('ADMIN')" style="display:none">true</span>
+        </div>
+    </div>
+
+    <!-- Edit Book Modal -->
+    <div class="modal fade" id="editBookModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sửa Thông Tin Sách</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editBookForm">
+                        <input type="hidden" id="edit-id">
+                        <div class="mb-3">
+                            <label for="edit-title" class="form-label">Tên Sách</label>
+                            <input type="text" class="form-control" id="edit-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-author" class="form-label">Tác Giả</label>
+                            <input type="text" class="form-control" id="edit-author" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-price" class="form-label">Giá</label>
+                            <input type="number" class="form-control" id="edit-price" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-category" class="form-label">Thể Loại</label>
+                            <select class="form-select" id="edit-category" required>
+                                <!-- Categories loaded via AJAX -->
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBook()">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editModal;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            editModal = new bootstrap.Modal(document.getElementById('editBookModal'));
+            loadBooks();
+            loadCategories();
+
+            const searchForm = document.getElementById('searchForm');
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const keyword = document.getElementById('searchInput').value;
+                loadBooks(keyword);
+            });
+        });
+
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        function loadCategories() {
+            fetch('/api/v1/categories')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('edit-category');
+                    select.innerHTML = '';
+                    data.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.id;
+                        option.textContent = cat.name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(err => console.error('Error loading categories:', err));
+        }
+
+        function loadBooks(keyword = '') {
+            let url = '/api/v1/books';
+            if (keyword) {
+                url = `/api/v1/books/search?keyword=${encodeURIComponent(keyword)}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('book-table-body');
+                    tbody.innerHTML = '';
+                    
+                    const isAdminElement = document.getElementById('isAdmin');
+                    const isAdmin = isAdminElement && isAdminElement.innerText === 'true';
+
+                    data.forEach(book => {
+                        const row = document.createElement('tr');
+                        
+                        let editBtn = '';
+                        let deleteBtn = '';
+                        
+                        if (isAdmin) {
+                            editBtn = `<button onclick="openEditModal(${book.id})" class="btn btn-warning btn-sm me-1">Sửa</button>`;
+                            deleteBtn = `<button onclick="apiDeleteBook(${book.id})" class="btn btn-danger btn-sm me-1">Xóa</button>`;
+                        }
+
+                        row.innerHTML = `
+                            <td>${book.id}</td>
+                            <td>${book.title}</td>
+                            <td>${book.author}</td>
+                            <td>${book.price.toLocaleString()}</td>
+                            <td>${book.category}</td>
+                            <td>
+                                ${editBtn}
+                                ${deleteBtn}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error loading books:', error));
+        }
+
+        function openEditModal(id) {
+            fetch(`/api/v1/books/${id}`)
+                .then(res => res.json())
+                .then(book => {
+                    document.getElementById('edit-id').value = book.id;
+                    document.getElementById('edit-title').value = book.title;
+                    document.getElementById('edit-author').value = book.author;
+                    document.getElementById('edit-price').value = book.price;
+                    document.getElementById('edit-category').value = book.categoryId;
+                    editModal.show();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function saveBook() {
+            const id = document.getElementById('edit-id').value;
+            const data = {
+                title: document.getElementById('edit-title').value,
+                author: document.getElementById('edit-author').value,
+                price: parseFloat(document.getElementById('edit-price').value),
+                quantity: 0,
+                categoryId: parseInt(document.getElementById('edit-category').value)
+            };
+
+            fetch(`/api/v1/books/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(async response => {
+                if (response.ok) {
+                    editModal.hide();
+                    showAlert('Cập nhật thành công!');
+                    loadBooks();
+                } else {
+                    const errorData = await response.json();
+                    let msg = 'Cập nhật thất bại!';
+                    if (Array.isArray(errorData)) {
+                         msg = errorData.map(e => e.defaultMessage).join(', ');
+                    } else if (errorData.message) {
+                         msg = errorData.message;
+                    }
+                    showAlert(msg, 'danger');
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function apiDeleteBook(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa?')) {
+                fetch(`/api/v1/books/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showAlert('Đã xóa sách thành công!');
+                        loadBooks();
+                    } else {
+                        showAlert('Xóa thất bại!', 'danger');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    </script>
+</body>
+</html>

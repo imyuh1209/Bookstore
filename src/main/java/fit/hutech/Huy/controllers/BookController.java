@@ -1,0 +1,95 @@
+package fit.hutech.Huy.controllers;
+
+import fit.hutech.Huy.entities.Book;
+import fit.hutech.Huy.services.BookService;
+import fit.hutech.Huy.services.CategoryService;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@Controller
+@RequestMapping("/books")
+@RequiredArgsConstructor
+public class BookController {
+
+    private final BookService bookService;
+    private final CategoryService categoryService;
+
+    @GetMapping
+    public String showAllBooks(
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "20") Integer pageSize,
+            @RequestParam(defaultValue = "id") String sortBy,
+            Model model) {
+        Page<Book> page = bookService.getAllBooksPage(pageNo, pageSize, sortBy);
+        model.addAttribute("books", page.getContent());
+        model.addAttribute("currentPage", pageNo);
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("totalItems", page.getTotalElements());
+        model.addAttribute("sortBy", sortBy);
+        return "book/list";
+    }
+
+    @GetMapping("/search")
+    public String searchBook(@RequestParam("keyword") String keyword, Model model) {
+        List<Book> books = bookService.searchBook(keyword);
+        model.addAttribute("books", books);
+        model.addAttribute("currentPage", 0);
+        model.addAttribute("totalPages", 1);
+        model.addAttribute("totalItems", books.size());
+        model.addAttribute("sortBy", "id");
+        return "book/list";
+    }
+
+    @GetMapping("/add")
+    public String addBookForm(Model model) {
+        model.addAttribute("book", new Book());
+        model.addAttribute("categories", categoryService.getAllCategories());
+        return "book/add";
+    }
+
+    @PostMapping("/add")
+    public String addBook(@Valid @ModelAttribute("book") Book book, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("categories", categoryService.getAllCategories());
+            return "book/add";
+        }
+        bookService.addBook(book);
+        return "redirect:/books";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String editBookForm(@PathVariable("id") Long id, Model model) {
+        Optional<Book> book = bookService.getBookById(id);
+        if (book.isPresent()) {
+            model.addAttribute("book", book.get());
+            model.addAttribute("categories", categoryService.getAllCategories());
+            return "book/edit";
+        }
+        return "redirect:/books";
+    }
+
+    @PostMapping("/edit")
+    public String editBook(@Valid @ModelAttribute("book") Book book, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("categories", categoryService.getAllCategories());
+            return "book/edit";
+        }
+        bookService.updateBook(book);
+        return "redirect:/books";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteBook(@PathVariable("id") Long id) {
+        bookService.deleteBookById(id);
+        return "redirect:/books";
+    }
+}

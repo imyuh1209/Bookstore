@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{book/layout :: layout(~{::body})}">
+<body>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-header text-center">
+                    <h3>Đăng Nhập</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/login}" method="post">
+                        <div th:if="${param.error}" class="alert alert-danger">
+                            <span th:text="${param.error != null and param.error[0] != '' ? param.error[0] : 'Tên đăng nhập hoặc mật khẩu không đúng!'}"></span>
+                        </div>
+                        <div th:if="${param.logout}" class="alert alert-success">
+                            Bạn đã đăng xuất thành công!
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" id="username" name="username" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Đăng Nhập</button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="/oauth2/authorization/google" class="btn btn-outline-danger">
+                            <i class="bi bi-google"></i> Đăng nhập bằng Google
+                        </a>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p>Chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
