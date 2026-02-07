@@ -22,9 +22,17 @@ public class Invoice {
     private Double totalPrice;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<ItemInvoice> itemInvoices;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private fit.hutech.Huy.constants.InvoiceStatus status = fit.hutech.Huy.constants.InvoiceStatus.PENDING;
 }

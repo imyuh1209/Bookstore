@@ -66,9 +66,22 @@ public class User implements UserDetails {
         if (roles == null) {
             return Collections.emptyList();
         }
-        return roles.stream()
-                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName()))
-                .toList();
+        
+        List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = new ArrayList<>();
+        
+        // Add Roles
+        roles.forEach(role -> {
+            authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName()));
+            
+            // Add Permissions associated with Role
+            if (role.getPermissions() != null) {
+                role.getPermissions().forEach(permission -> 
+                    authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(permission.getName()))
+                );
+            }
+        });
+        
+        return authorities;
     }
 
     @Override

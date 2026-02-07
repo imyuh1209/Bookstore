@@ -41,9 +41,19 @@ public class Book {
     @ManyToOne
     @JoinColumn(name = "category_id")
     @NotNull(message = "Category is required")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Category category;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<ItemInvoice> itemInvoices;
 }

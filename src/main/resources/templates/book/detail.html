@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{book/layout :: layout(~{::body})}">
+<body>
+    <div class="container mt-5 mb-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/books">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="#" th:text="${book.category.name}">Category</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${book.title}">Title</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <img th:src="${book.imageUrl != null && book.imageUrl != '' ? book.imageUrl : 'https://placehold.co/400x600?text=No+Image'}" 
+                     class="img-fluid rounded shadow w-100" style="object-fit: cover;" alt="Book Cover">
+            </div>
+            <div class="col-md-8">
+                <h1 th:text="${book.title}" class="display-5 fw-bold mb-2">Title</h1>
+                <h4 class="text-muted mb-3">Tác giả: <span th:text="${book.author}">Author</span></h4>
+                
+                <div class="mb-3">
+                    <span class="badge bg-info text-dark" th:text="${book.category.name}">Category</span>
+                    <span class="badge bg-success" th:if="${book.quantity > 0}">Còn hàng</span>
+                    <span class="badge bg-danger" th:if="${book.quantity <= 0}">Hết hàng</span>
+                </div>
+
+                <h3 class="text-danger fw-bold mb-4" th:text="${#numbers.formatDecimal(book.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">Price</h3>
+                
+                <div class="card mb-4">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title">Mô tả sản phẩm</h5>
+                        <p class="card-text" th:text="${book.description != null ? book.description : 'Chưa có mô tả cho sách này.'}" style="white-space: pre-line; text-align: justify;">Description</p>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-lg px-4" th:onclick="'addToCart(' + ${book.id} + ')'" th:disabled="${book.quantity <= 0}">
+                        <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ
+                    </button>
+                    <a href="/books" class="btn btn-outline-secondary btn-lg px-4">Quay lại</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addToCart(bookId) {
+             // Placeholder for cart functionality
+             alert('Đã thêm sản phẩm vào giỏ hàng!');
+             // In real app: fetch('/cart/add/' + bookId)...
+        }
+    </script>
+</body>
+</html>

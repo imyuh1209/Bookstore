@@ -36,7 +36,7 @@ class ApiControllerTest {
 
     @Test
     void createBook_success() {
-        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 1L);
+        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 1L, "http://image.url", "Description");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
 
@@ -53,7 +53,7 @@ class ApiControllerTest {
 
     @Test
     void createBook_validationError() {
-        BookPostVm vm = new BookPostVm("", "", -1.0, -1, null);
+        BookPostVm vm = new BookPostVm("", "", -1.0, -1, null, null, null);
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(true);
         when(bindingResult.getAllErrors()).thenReturn(List.of(new ObjectError("title", "error")));
@@ -66,7 +66,7 @@ class ApiControllerTest {
 
     @Test
     void createBook_categoryNotFound() {
-        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 99L);
+        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 99L, "http://image.url", "Description");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
         when(categoryService.getCategoryById(99L)).thenReturn(null);
@@ -80,7 +80,7 @@ class ApiControllerTest {
     @Test
     void updateBook_success() {
         Long id = 1L;
-        BookPostVm vm = new BookPostVm("New Title", "New Author", 200.0, 20, 1L);
+        BookPostVm vm = new BookPostVm("New Title", "New Author", 200.0, 20, 1L, "http://new.image", "New Desc");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
 
@@ -104,7 +104,7 @@ class ApiControllerTest {
     @Test
     void updateBook_bookNotFound() {
         Long id = 99L;
-        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 1L);
+        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 1L, "url", "desc");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
         when(bookService.getBookById(id)).thenReturn(Optional.empty());
@@ -117,7 +117,7 @@ class ApiControllerTest {
     @Test
     void updateBook_categoryNotFound() {
         Long id = 1L;
-        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 99L);
+        BookPostVm vm = new BookPostVm("Title", "Author", 100.0, 10, 99L, "url", "desc");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
         

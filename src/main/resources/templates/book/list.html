@@ -3,45 +3,94 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{book/layout :: layout(~{::body})}">
 <body>
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h3>Danh Sách Sách</h3>
+    <!-- Banner Carousel -->
+    <div id="bannerCarousel" class="carousel slide mb-4" data-bs-ride="carousel" th:if="${not #lists.isEmpty(banners)}">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#bannerCarousel" th:each="banner, iterStat : ${banners}"
+                    th:data-bs-slide-to="${iterStat.index}" th:classappend="${iterStat.index == 0} ? 'active' : ''"
+                    aria-current="true" th:aria-label="'Slide ' + ${iterStat.count}"></button>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <a href="/books/add" class="btn btn-primary">Thêm Sách Mới</a>
-                </div>
-                <div class="col-md-6">
-                    <form id="searchForm" class="d-flex">
-                        <input class="form-control me-2" type="search" id="searchInput" placeholder="Tìm kiếm sách..." aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Tìm</button>
-                    </form>
-                </div>
+        <div class="carousel-inner">
+            <div class="carousel-item" th:each="banner, iterStat : ${banners}" th:classappend="${iterStat.index == 0} ? 'active' : ''">
+                <a th:href="${banner.linkUrl != null ? banner.linkUrl : '#'}" style="text-decoration: none;">
+                    <img th:src="${banner.imageUrl}" class="d-block w-100" th:alt="${banner.title}"
+                         style="height: 400px; object-fit: cover;">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                        <h3 th:text="${banner.title}">Title</h3>
+                    </div>
+                </a>
             </div>
-            
-            <div id="alert-container"></div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
 
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên Sách</th>
-                        <th>Tác Giả</th>
-                        <th>Giá</th>
-                        <th>Thể Loại</th>
-                        <th>Thao Tác</th>
-                    </tr>
-                </thead>
-                <tbody id="book-table-body">
-                    <!-- Data will be loaded via AJAX -->
-                </tbody>
-            </table>
-            
-            <!-- Hidden element to check admin role -->
-            <span id="isAdmin" sec:authorize="hasAnyAuthority('ADMIN')" style="display:none">true</span>
+    <!-- Fallback Static Banner if no banners exist -->
+    <div class="bg-dark text-white py-5 mb-4 text-center" th:if="${#lists.isEmpty(banners)}">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Book Store</h1>
+            <p class="lead">Khám phá thế giới tri thức vô tận</p>
         </div>
     </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Danh Mục</h5>
+                    </div>
+                    <ul class="list-group list-group-flush" id="category-list">
+                        <!-- Loaded via AJAX -->
+                        <li class="list-group-item">Đang tải...</li>
+                    </ul>
+                </div>
+                
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Tìm Kiếm</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="searchForm">
+                            <input class="form-control mb-2" type="search" id="searchInput" placeholder="Tên sách, tác giả..." aria-label="Search">
+                            <button class="btn btn-outline-success w-100" type="submit">Tìm Kiếm</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mt-3" sec:authorize="hasAuthority('ADMIN')">
+                    <a href="/books/add" class="btn btn-primary w-100">Quản Lý Sách (Thêm Mới)</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <div id="alert-container"></div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 id="category-title">Tất Cả Sách</h3>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary active" id="view-grid"><i class="bi bi-grid-3x3-gap"></i> Lưới</button>
+                        <button type="button" class="btn btn-outline-secondary" id="view-list"><i class="bi bi-list"></i> Danh Sách</button>
+                    </div>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-3 g-4" id="book-grid">
+                    <!-- Books loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden element to check admin role -->
+    <span id="isAdmin" sec:authorize="hasAnyAuthority('ADMIN')" style="display:none">true</span>
 
     <!-- Edit Book Modal -->
     <div class="modal fade" id="editBookModal" tabindex="-1" aria-hidden="true">
@@ -67,7 +116,19 @@
                             <input type="number" class="form-control" id="edit-price" required min="1">
                         </div>
                         <div class="mb-3">
-                            <label for="edit-category" class="form-label">Thể Loại</label>
+                            <label for="edit-quantity" class="form-label">Số Lượng</label>
+                            <input type="number" class="form-control" id="edit-quantity" required min="0">
+                        </div>
+                         <div class="mb-3">
+                             <label for="edit-image" class="form-label">URL Ảnh Bìa</label>
+                             <input type="url" class="form-control" id="edit-image" placeholder="https://example.com/image.jpg">
+                         </div>
+                         <div class="mb-3">
+                             <label for="edit-description" class="form-label">Mô tả</label>
+                             <textarea class="form-control" id="edit-description" rows="3"></textarea>
+                         </div>
+                         <div class="mb-3">
+                             <label for="edit-category" class="form-label">Thể Loại</label>
                             <select class="form-select" id="edit-category" required>
                                 <!-- Categories loaded via AJAX -->
                             </select>
@@ -84,19 +145,52 @@
 
     <script>
         let editModal;
+        let currentBooks = [];
+        let currentView = 'grid'; // 'grid' or 'list'
 
         document.addEventListener("DOMContentLoaded", function() {
             editModal = new bootstrap.Modal(document.getElementById('editBookModal'));
-            loadBooks();
-            loadCategories();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('category');
+            const categoryId = categoryParam ? parseInt(categoryParam) : null;
+
+            loadBooks('', categoryId);
+            loadCategoriesSidebar();
 
             const searchForm = document.getElementById('searchForm');
             searchForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const keyword = document.getElementById('searchInput').value;
                 loadBooks(keyword);
+                document.getElementById('category-title').innerText = `Kết quả tìm kiếm: "${keyword}"`;
+            });
+
+            // View mode switchers
+            document.getElementById('view-grid').addEventListener('click', function() {
+                setActiveView('grid');
+            });
+            document.getElementById('view-list').addEventListener('click', function() {
+                setActiveView('list');
             });
         });
+
+        function setActiveView(mode) {
+            currentView = mode;
+            // Update buttons
+            if (mode === 'grid') {
+                document.getElementById('view-grid').classList.add('active');
+                document.getElementById('view-list').classList.remove('active');
+                document.getElementById('book-grid').classList.add('row-cols-1', 'row-cols-md-3');
+                document.getElementById('book-grid').classList.remove('d-flex', 'flex-column', 'gap-3');
+            } else {
+                document.getElementById('view-list').classList.add('active');
+                document.getElementById('view-grid').classList.remove('active');
+                document.getElementById('book-grid').classList.remove('row-cols-1', 'row-cols-md-3');
+                document.getElementById('book-grid').classList.add('d-flex', 'flex-column', 'gap-3');
+            }
+            renderBooks();
+        }
 
         function showAlert(message, type = 'success') {
             const container = document.getElementById('alert-container');
@@ -111,23 +205,57 @@
             }, 3000);
         }
 
-        function loadCategories() {
+        function loadCategoriesSidebar() {
             fetch('/api/v1/categories')
                 .then(response => response.json())
                 .then(data => {
+                    // Update Sidebar
+                    const list = document.getElementById('category-list');
+                    list.innerHTML = `<li class="list-group-item"><a href="#" onclick="loadBooks(); return false;" class="text-decoration-none fw-bold">Tất Cả</a></li>`;
+                    
+                    // Update Edit Modal Select
                     const select = document.getElementById('edit-category');
                     select.innerHTML = '';
+
                     data.forEach(cat => {
+                        // Sidebar Item
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.innerHTML = `<a href="#" onclick="filterByCategory(${cat.id}, '${cat.name}'); return false;" class="text-decoration-none">${cat.name}</a>`;
+                        list.appendChild(li);
+
+                        // Modal Option
                         const option = document.createElement('option');
                         option.value = cat.id;
                         option.textContent = cat.name;
                         select.appendChild(option);
                     });
+
+                    // Check URL param to update title
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const categoryParam = urlParams.get('category');
+                    if (categoryParam) {
+                        const catId = parseInt(categoryParam);
+                        const currentCat = data.find(c => c.id === catId);
+                        if (currentCat) {
+                            document.getElementById('category-title').innerText = `Danh Mục: ${currentCat.name}`;
+                        }
+                    }
                 })
                 .catch(err => console.error('Error loading categories:', err));
         }
 
-        function loadBooks(keyword = '') {
+        function filterByCategory(id, name) {
+             document.getElementById('category-title').innerText = `Danh Mục: ${name}`;
+             // Note: Ideally call API /api/v1/books?categoryId=... 
+             // For now, let's just reload all and filter client side if needed, or better, implement the API filter.
+             // Given current API limitations, we will reload all and filter client-side as a temporary measure 
+             // OR assume the backend will support it later. 
+             // For this task, I will fetch all and filter client side to make it work immediately without backend changes.
+             loadBooks('', id);
+        }
+
+        function loadBooks(keyword = '', categoryId = null) {
             let url = '/api/v1/books';
             if (keyword) {
                 url = `/api/v1/books/search?keyword=${encodeURIComponent(keyword)}`;
@@ -136,38 +264,141 @@
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    const tbody = document.getElementById('book-table-body');
-                    tbody.innerHTML = '';
-                    
-                    const isAdminElement = document.getElementById('isAdmin');
-                    const isAdmin = isAdminElement && isAdminElement.innerText === 'true';
-
-                    data.forEach(book => {
-                        const row = document.createElement('tr');
-                        
-                        let editBtn = '';
-                        let deleteBtn = '';
-                        
-                        if (isAdmin) {
-                            editBtn = `<button onclick="openEditModal(${book.id})" class="btn btn-warning btn-sm me-1">Sửa</button>`;
-                            deleteBtn = `<button onclick="apiDeleteBook(${book.id})" class="btn btn-danger btn-sm me-1">Xóa</button>`;
-                        }
-
-                        row.innerHTML = `
-                            <td>${book.id}</td>
-                            <td>${book.title}</td>
-                            <td>${book.author}</td>
-                            <td>${book.price.toLocaleString()}</td>
-                            <td>${book.category}</td>
-                            <td>
-                                ${editBtn}
-                                ${deleteBtn}
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
+                    if (categoryId) {
+                        currentBooks = data.filter(b => b.categoryId === categoryId);
+                    } else {
+                        currentBooks = data;
+                    }
+                    renderBooks();
                 })
                 .catch(error => console.error('Error loading books:', error));
+        }
+
+        function renderBooks() {
+            const grid = document.getElementById('book-grid');
+            grid.innerHTML = '';
+            
+            const isAdminElement = document.getElementById('isAdmin');
+            const isAdmin = isAdminElement && isAdminElement.innerText === 'true';
+
+            if (currentBooks.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center"><p class="text-muted">Không tìm thấy sách nào.</p></div>';
+                return;
+            }
+
+            currentBooks.forEach(book => {
+                const imageUrl = book.imageUrl || 'https://placehold.co/300x400?text=No+Image';
+                
+                let adminActions = '';
+                if (isAdmin) {
+                    adminActions = `
+                        <div class="mt-2 d-flex justify-content-between">
+                            <button onclick="openEditModal(${book.id})" class="btn btn-outline-warning btn-sm flex-grow-1 me-1">Sửa</button>
+                            <button onclick="apiDeleteBook(${book.id})" class="btn btn-outline-danger btn-sm flex-grow-1">Xóa</button>
+                        </div>
+                    `;
+                }
+
+                const col = document.createElement('div');
+                
+                if (currentView === 'grid') {
+                    col.className = 'col';
+                    col.innerHTML = `
+                        <div class="card h-100 shadow-sm border-0 hover-shadow">
+                            <div class="position-relative overflow-hidden">
+                                <a href="/books/${book.id}">
+                                    <img src="${imageUrl}" class="card-img-top" alt="${book.title}" style="height: 300px; object-fit: cover;">
+                                </a>
+                                <span class="badge bg-primary position-absolute top-0 end-0 m-2">${book.category}</span>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <a href="/books/${book.id}" class="text-decoration-none text-dark">
+                                    <h5 class="card-title text-truncate" title="${book.title}">${book.title}</h5>
+                                </a>
+                                <p class="card-text text-muted small mb-1">${book.author}</p>
+                                <h6 class="card-text text-danger fw-bold mb-1">${book.price.toLocaleString()} VNĐ</h6>
+                                <p class="card-text text-muted small mb-3">Còn lại: ${book.quantity}</p>
+                                
+                                <div class="mt-auto">
+                                    <button onclick="addToCart(${book.id})" class="btn btn-primary w-100 mb-2">
+                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                    ${adminActions}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // List View
+                    col.className = 'card shadow-sm border-0 hover-shadow w-100';
+                    col.innerHTML = `
+                        <div class="row g-0">
+                            <div class="col-md-3">
+                                <a href="/books/${book.id}">
+                                    <img src="${imageUrl}" class="img-fluid rounded-start h-100" alt="${book.title}" style="object-fit: cover; max-height: 200px; width: 100%;">
+                                </a>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body d-flex flex-column h-100">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <a href="/books/${book.id}" class="text-decoration-none text-dark">
+                                                <h5 class="card-title mb-1">${book.title}</h5>
+                                            </a>
+                                            <p class="card-text text-muted small mb-2">${book.author} | <span class="badge bg-primary">${book.category}</span></p>
+                                        </div>
+                                        <h5 class="text-danger fw-bold">${book.price.toLocaleString()} VNĐ</h5>
+                                    </div>
+                                    <p class="card-text mb-3 flex-grow-1">${book.description ? (book.description.length > 150 ? book.description.substring(0, 150) + '...' : book.description) : 'Chưa có mô tả'}</p>
+                                    
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3 text-muted small">Còn lại: ${book.quantity}</span>
+                                        <button onclick="addToCart(${book.id})" class="btn btn-primary btn-sm me-2">
+                                            <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                        </button>
+                                        ${isAdmin ? `
+                                            <button onclick="openEditModal(${book.id})" class="btn btn-outline-warning btn-sm me-1">Sửa</button>
+                                            <button onclick="apiDeleteBook(${book.id})" class="btn btn-outline-danger btn-sm">Xóa</button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                grid.appendChild(col);
+            });
+        }
+
+        
+        function addToCart(bookId) {
+             fetch('/cart/add/' + bookId)
+                 .then(response => {
+                     if (response.ok) {
+                         showAlert('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                     } else {
+                         showAlert('Lỗi khi thêm vào giỏ hàng', 'danger');
+                     }
+                 })
+                 .catch(error => {
+                     console.error('Error:', error);
+                     showAlert('Lỗi kết nối', 'danger');
+                 });
+        }
+
+        function apiDeleteBook(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa sách này?')) return;
+            
+            fetch(`/api/v1/books/${id}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        showAlert('Xóa sách thành công');
+                        loadBooks();
+                    } else {
+                        showAlert('Xóa thất bại', 'danger');
+                    }
+                })
+                .catch(err => console.error(err));
         }
 
         function openEditModal(id) {
@@ -178,7 +409,10 @@
                     document.getElementById('edit-title').value = book.title;
                     document.getElementById('edit-author').value = book.author;
                     document.getElementById('edit-price').value = book.price;
+                    document.getElementById('edit-quantity').value = book.quantity;
                     document.getElementById('edit-category').value = book.categoryId;
+                    document.getElementById('edit-image').value = book.imageUrl || '';
+                    document.getElementById('edit-description').value = book.description || '';
                     editModal.show();
                 })
                 .catch(error => console.error('Error:', error));
@@ -190,8 +424,10 @@
                 title: document.getElementById('edit-title').value,
                 author: document.getElementById('edit-author').value,
                 price: parseFloat(document.getElementById('edit-price').value),
-                quantity: 0,
-                categoryId: parseInt(document.getElementById('edit-category').value)
+                quantity: parseInt(document.getElementById('edit-quantity').value),
+                categoryId: parseInt(document.getElementById('edit-category').value),
+                imageUrl: document.getElementById('edit-image').value,
+                description: document.getElementById('edit-description').value
             };
 
             fetch(`/api/v1/books/${id}`, {
@@ -201,41 +437,28 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(async response => {
+            .then(response => {
                 if (response.ok) {
                     editModal.hide();
-                    showAlert('Cập nhật thành công!');
+                    showAlert('Cập nhật sách thành công');
                     loadBooks();
                 } else {
-                    const errorData = await response.json();
-                    let msg = 'Cập nhật thất bại!';
-                    if (Array.isArray(errorData)) {
-                         msg = errorData.map(e => e.defaultMessage).join(', ');
-                    } else if (errorData.message) {
-                         msg = errorData.message;
-                    }
-                    showAlert(msg, 'danger');
+                    response.json().then(data => {
+                        showAlert('Lỗi: ' + JSON.stringify(data), 'danger');
+                    });
                 }
             })
-            .catch(err => console.error(err));
-        }
-
-        function apiDeleteBook(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa?')) {
-                fetch(`/api/v1/books/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showAlert('Đã xóa sách thành công!');
-                        loadBooks();
-                    } else {
-                        showAlert('Xóa thất bại!', 'danger');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
+            .catch(error => console.error('Error:', error));
         }
     </script>
+    
+    <style>
+        .hover-shadow:hover {
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</body>
 </body>
 </html>

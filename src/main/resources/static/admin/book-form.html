@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Sách (Admin)</title>
+    <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        .sidebar { height: 100vh; background: #212529; color: #fff; position: fixed; top: 0; left: 0; width: 250px; padding-top: 20px; transition: all 0.3s; z-index: 1000; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid #4b545c; }
+        .sidebar-header h3 { margin: 0; font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: #c2c7d0; display: block; transition: 0.3s; }
+        .sidebar a:hover { color: #fff; background-color: #343a40; }
+        .sidebar a.active { background-color: #0d6efd; color: white; }
+        .sidebar i { margin-right: 10px; width: 20px; text-align: center; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .navbar-top { background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 10px 20px; margin-bottom: 20px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        @media (max-width: 768px) { .sidebar { margin-left: -250px; } .sidebar.active { margin-left: 0; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header"><h3>Admin Panel</h3></div>
+        <!-- Menu items will be loaded via admin-layout.js -->
+        <div class="text-center mt-5">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="navbar-top">
+            <button class="btn btn-outline-secondary d-md-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+            <h4 class="m-0" id="pageTitle">Thêm Sách Mới</h4>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-4 me-2"></i> <span>Admin</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
+                        <li><form action="/logout" method="post" class="dropdown-item p-0"><button class="btn btn-link text-decoration-none text-dark w-100 text-start px-3" type="submit">Đăng Xuất</button></form></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form id="bookForm">
+                        <input type="hidden" id="bookId" />
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="title" class="form-label">Tiêu đề</label>
+                                <input type="text" class="form-control" id="title" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="author" class="form-label">Tác giả</label>
+                                <input type="text" class="form-control" id="author" required />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="price" class="form-label">Giá</label>
+                                <input type="number" class="form-control" id="price" required min="0" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="quantity" class="form-label">Số lượng</label>
+                                <input type="number" class="form-control" id="quantity" required min="0" value="0" />
+                            </div>
+                            <div class="col-md-4">
+                                <label for="category" class="form-label">Danh mục</label>
+                                <select class="form-select" id="category" required>
+                                    <option value="">Chọn danh mục...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imageFile" class="form-label">Hình ảnh</label>
+                            <input type="file" class="form-control" id="imageFile" accept="image/*" />
+                            <div id="currentImage" class="mt-2" style="display:none;">
+                                <img src="" alt="Current Image" style="max-height: 100px;" class="img-thumbnail" />
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/admin/books" class="btn btn-secondary">Hủy</a>
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/js/admin-layout.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Sidebar toggle logic is handled in admin-layout.js
+            
+            loadCategories();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            if (bookId) {
+                $('#pageTitle').text('Chỉnh Sửa Sách');
+                $('#bookId').val(bookId);
+                loadBook(bookId);
+            }
+
+            $('#bookForm').on('submit', function(e) {
+                e.preventDefault();
+                saveBook();
+            });
+        });
+
+        function loadCategories() {
+            $.ajax({
+                url: '/api/v1/admin/categories',
+                type: 'GET',
+                async: false, // Wait for categories to load before loading book
+                success: function(categories) {
+                    const select = $('#category');
+                    categories.forEach(c => {
+                        select.append(`<option value="${c.id}">${c.name}</option>`);
+                    });
+                }
+            });
+        }
+
+        function loadBook(id) {
+            $.ajax({
+                url: `/api/v1/admin/books/${id}`,
+                type: 'GET',
+                success: function(book) {
+                    $('#title').val(book.title);
+                    $('#author').val(book.author);
+                    $('#price').val(book.price);
+                    $('#quantity').val(book.quantity);
+                    $('#category').val(book.categoryId);
+                    $('#description').val(book.description);
+                    if (book.imageUrl) {
+                        $('#currentImage img').attr('src', book.imageUrl);
+                        $('#currentImage').show();
+                    }
+                }
+            });
+        }
+
+        function saveBook() {
+            const id = $('#bookId').val();
+            const formData = new FormData();
+            formData.append('title', $('#title').val());
+            formData.append('author', $('#author').val());
+            formData.append('price', $('#price').val());
+            formData.append('quantity', $('#quantity').val());
+            formData.append('categoryId', $('#category').val());
+            formData.append('description', $('#description').val());
+            
+            const fileInput = $('#imageFile')[0];
+            if (fileInput.files.length > 0) {
+                formData.append('imageFile', fileInput.files[0]);
+            }
+
+            const url = id ? `/api/v1/admin/books/${id}` : '/api/v1/admin/books';
+            const method = id ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                type: method,
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function() {
+                    alert('Lưu thành công!');
+                    window.location.href = '/admin/books';
+                },
+                error: function(xhr) {
+                    alert('Lỗi: ' + (xhr.responseJSON?.message || 'Có lỗi xảy ra'));
+                }
+            });
+        }
+    </script>
+</body>
+</html>

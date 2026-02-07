@@ -54,6 +54,8 @@ public class ApiController {
         book.setPrice(bookPostVm.price());
         book.setQuantity(bookPostVm.quantity());
         book.setCategory(category);
+        book.setImageUrl(bookPostVm.imageUrl());
+        book.setDescription(bookPostVm.description());
         
         bookService.addBook(book);
         return ResponseEntity.ok(BookGetVm.from(book));
@@ -80,6 +82,8 @@ public class ApiController {
         existingBook.setPrice(bookPostVm.price());
         existingBook.setQuantity(bookPostVm.quantity());
         existingBook.setCategory(category);
+        existingBook.setImageUrl(bookPostVm.imageUrl());
+        existingBook.setDescription(bookPostVm.description());
         
         bookService.updateBook(existingBook);
         return ResponseEntity.ok(BookGetVm.from(existingBook));

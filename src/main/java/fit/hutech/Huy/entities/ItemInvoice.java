@@ -21,9 +21,13 @@ public class ItemInvoice {
 
     @ManyToOne
     @JoinColumn(name = "book_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Book book;
 
     @ManyToOne
     @JoinColumn(name = "invoice_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Invoice invoice;
 }

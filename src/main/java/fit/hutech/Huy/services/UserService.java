@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +33,14 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public void updateUser(User user) {
+        userRepository.save(user);
+    }
+
     public void save(@NotNull User user) {
         user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
         user.setProvider(Provider.LOCAL.value);
@@ -45,6 +54,26 @@ public class UserService implements UserDetailsService {
                 userRepository.save(user);
             });
         });
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public List<fit.hutech.Huy.entities.Role> getAllRoles() {
+        return roleRepository.findAll();
+    }
+
+    public void updateUserRoles(Long userId, List<Long> roleIds) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        List<fit.hutech.Huy.entities.Role> newRoles = roleRepository.findAllById(roleIds);
+        
+        user.getRoles().clear();
+        user.getRoles().addAll(newRoles);
+        
+        userRepository.save(user);
     }
 
     public User saveOauthUser(String email, String name, String providerId) {

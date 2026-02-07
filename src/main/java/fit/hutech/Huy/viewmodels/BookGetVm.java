@@ -3,7 +3,7 @@ package fit.hutech.Huy.viewmodels;
 import fit.hutech.Huy.entities.Book;
 import jakarta.validation.constraints.NotNull;
 
-public record BookGetVm(Long id, String title, String author, Double price, Integer quantity, String category, Long categoryId) {
+public record BookGetVm(Long id, String title, String author, Double price, Integer quantity, String category, Long categoryId, String imageUrl, String description) {
     public static BookGetVm from(Book book) {
         String categoryName = book.getCategory() != null ? book.getCategory().getName() : "Unknown";
         Long categoryId = book.getCategory() != null ? book.getCategory().getId() : null;
@@ -14,7 +14,9 @@ public record BookGetVm(Long id, String title, String author, Double price, Inte
                 book.getPrice(),
                 book.getQuantity() != null ? book.getQuantity() : 0,
                 categoryName,
-                categoryId
+                categoryId,
+                book.getImageUrl(),
+                book.getDescription()
         );
     }
 }

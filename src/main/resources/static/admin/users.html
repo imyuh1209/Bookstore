@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý User (Admin)</title>
+    <!-- Bootstrap CSS -->
+    <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- JQuery -->
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        .sidebar { height: 100vh; background: #212529; color: #fff; position: fixed; top: 0; left: 0; width: 250px; padding-top: 20px; transition: all 0.3s; z-index: 1000; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid #4b545c; }
+        .sidebar-header h3 { margin: 0; font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: #c2c7d0; display: block; transition: 0.3s; }
+        .sidebar a:hover { color: #fff; background-color: #343a40; }
+        .sidebar a.active { background-color: #0d6efd; color: white; }
+        .sidebar i { margin-right: 10px; width: 20px; text-align: center; }
+        .main-content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
+        .navbar-top { background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 10px 20px; margin-bottom: 20px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        @media (max-width: 768px) { .sidebar { margin-left: -250px; } .sidebar.active { margin-left: 0; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h3>Admin Panel</h3>
+        </div>
+        <!-- Menu items will be loaded via admin-layout.js -->
+        <div class="text-center mt-5">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="navbar-top">
+            <button class="btn btn-outline-secondary d-md-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+            <h4 class="m-0">Quản Lý User</h4>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-4 me-2"></i> <span>Admin</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
+                        <li><form action="/logout" method="post" class="dropdown-item p-0"><button class="btn btn-link text-decoration-none text-dark w-100 text-start px-3" type="submit">Đăng Xuất</button></form></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle" id="usersTable">
+                            <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Provider</th>
+                                <th>Roles</th>
+                                <th>Hành Động</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="7" class="text-center">Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Roles Modal -->
+    <div class="modal fade" id="editRolesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cập nhật Quyền User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId">
+                    <div id="rolesCheckboxes">
+                        <!-- Checkboxes will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUserRoles()">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/js/admin-layout.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Sidebar toggle logic is handled in admin-layout.js
+            loadUsers();
+        });
+
+        let allRoles = [];
+
+        function loadUsers() {
+            // First load roles to populate dropdown/checkboxes later
+            $.ajax({
+                url: '/api/v1/admin/users/roles',
+                type: 'GET',
+                success: function(roles) {
+                    allRoles = roles;
+                    // Then load users
+                    $.ajax({
+                        url: '/api/v1/admin/users',
+                        type: 'GET',
+                        success: function(users) {
+                            const tbody = $('#usersTable tbody');
+                            tbody.empty();
+                            if (!users || users.length === 0) {
+                                tbody.append('<tr><td colspan="7" class="text-center">Chưa có user nào.</td></tr>');
+                                return;
+                            }
+                            users.forEach(user => {
+                                const roleNames = user.roles.map(r => `<span class="badge bg-secondary me-1">${r.name}</span>`).join('');
+                                const row = `
+                                    <tr>
+                                        <td>${user.id}</td>
+                                        <td class="fw-bold">${user.username}</td>
+                                        <td>${user.email}</td>
+                                        <td>${user.phone || ''}</td>
+                                        <td>${user.provider || 'LOCAL'}</td>
+                                        <td>${roleNames}</td>
+                                        <td>
+                                            <button onclick="openEditRolesModal(${user.id}, '${user.roles.map(r => r.id).join(',')}')" class="btn btn-sm btn-info text-white">
+                                                <i class="bi bi-shield-lock"></i> Phân Quyền
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                                tbody.append(row);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function openEditRolesModal(userId, currentRoleIdsStr) {
+            $('#editUserId').val(userId);
+            const currentRoleIds = currentRoleIdsStr ? currentRoleIdsStr.split(',').map(Number) : [];
+            const container = $('#rolesCheckboxes');
+            container.empty();
+            
+            allRoles.forEach(role => {
+                const checked = currentRoleIds.includes(role.id) ? 'checked' : '';
+                container.append(`
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${role.id}" id="role_${role.id}" ${checked}>
+                        <label class="form-check-label" for="role_${role.id}">
+                            ${role.name} <small class="text-muted">(${role.description || ''})</small>
+                        </label>
+                    </div>
+                `);
+            });
+            
+            new bootstrap.Modal(document.getElementById('editRolesModal')).show();
+        }
+
+        function saveUserRoles() {
+            const userId = $('#editUserId').val();
+            const selectedRoles = [];
+            $('#rolesCheckboxes input:checked').each(function() {
+                selectedRoles.push($(this).val());
+            });
+
+            $.ajax({
+                url: `/api/v1/admin/users/${userId}/roles`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(selectedRoles.map(Number)),
+                success: function() {
+                    bootstrap.Modal.getInstance(document.getElementById('editRolesModal')).hide();
+                    alert('Cập nhật quyền thành công!');
+                    loadUsers();
+                },
+                error: function() {
+                    alert('Lỗi khi cập nhật quyền.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

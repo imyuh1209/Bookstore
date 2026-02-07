@@ -5,6 +5,7 @@ import fit.hutech.Huy.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -57,10 +58,37 @@ public class SecurityConfig {
         return http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/css/**", "/js/**", "/webjars/**", "/", "/register", "/error").permitAll()
-                .requestMatchers("/books/edit/**", "/books/add", "/books/delete/**").hasAnyAuthority("ADMIN")
-                .requestMatchers("/books").hasAnyAuthority("ADMIN", "USER")
+                .requestMatchers("/css/**", "/js/**", "/webjars/**", "/", "/register", "/error", "/uploads/**").permitAll()
+                .requestMatchers("/books/edit/**", "/books/add", "/books/delete/**").hasAnyAuthority("ADMIN", "BookManage")
+                
+                // Admin API - Common
+                .requestMatchers("/api/v1/admin/me").hasAnyAuthority("ADMIN", "UserManage", "BookManage")
+                
+                // Admin API - Books & Banners
+                .requestMatchers("/api/v1/admin/books/**", "/api/v1/admin/banners/**", "/api/v1/admin/categories/**").hasAnyAuthority("ADMIN", "BookManage")
+                
+                // Admin API - Users
+                .requestMatchers("/api/v1/admin/users/**").hasAnyAuthority("ADMIN", "UserManage")
+
+                // Admin API - Roles, Permissions
+                .requestMatchers("/api/v1/admin/roles/**", "/api/v1/admin/permissions/**").hasAnyAuthority("ADMIN")
+                
+                // Admin Pages - Books & Banners
+                .requestMatchers("/admin/books", "/admin/books.html", "/admin/book-form.html", "/admin/banners", "/admin/banners.html").hasAnyAuthority("ADMIN", "BookManage")
+                
+                // Admin Pages - Users
+                .requestMatchers("/admin/users", "/admin/users.html").hasAnyAuthority("ADMIN", "UserManage")
+
+                // Admin Pages - Roles, Permissions
+                .requestMatchers("/admin/roles", "/admin/roles.html", "/admin/permissions", "/admin/permissions.html").hasAnyAuthority("ADMIN")
+                
+                // Admin Layout/General
+                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "UserManage", "BookManage")
+                
+                .requestMatchers("/books", "/books/**").permitAll()
+                .requestMatchers("/cart", "/cart/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/books/**", "/api/v1/categories/**").permitAll()
                 .requestMatchers("/api/**").hasAnyAuthority("ADMIN", "USER")
                 .anyRequest().authenticated()
             )
@@ -73,7 +101,7 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
+                .logoutSuccessUrl("/")
                 .permitAll()
             )
             .oauth2Login(oauth2 -> oauth2

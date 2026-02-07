@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Sách (Static)</title>
+    <!-- Bootstrap CSS -->
+    <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- JQuery -->
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            height: 100vh;
+            background: #212529;
+            color: #fff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            padding-top: 20px;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #4b545c;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .sidebar a {
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            color: #c2c7d0;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            color: #fff;
+            background-color: #343a40;
+        }
+        .sidebar a.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .sidebar i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .navbar-top {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            .sidebar.active {
+                margin-left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h3>Admin Panel</h3>
+        </div>
+        <!-- Menu items will be loaded via admin-layout.js -->
+        <div class="text-center mt-5">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <div class="navbar-top">
+            <button class="btn btn-outline-secondary d-md-none" id="sidebarToggle">
+                <i class="bi bi-list"></i>
+            </button>
+            <h4 class="m-0">Quản Lý Sách (API Mode)</h4>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-4 me-2"></i>
+                        <span>Admin</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
+                        <li>
+                            <form action="/logout" method="post" class="dropdown-item p-0">
+                                <button class="btn btn-link text-decoration-none text-dark w-100 text-start px-3" type="submit">Đăng Xuất</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Quản Lý Sách</h2>
+                    <a href="/admin/book-form.html" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Thêm Sách Mới
+                    </a>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="booksTable">
+                                <thead class="table-light">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col" style="width: 100px;">Hình Ảnh</th>
+                                    <th scope="col">Tên Sách</th>
+                                    <th scope="col">Tác Giả</th>
+                                    <th scope="col">Giá</th>
+                                    <th scope="col">Số Lượng</th>
+                                    <th scope="col">Danh Mục</th>
+                                    <th scope="col" style="width: 150px;">Hành Động</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded here via JS -->
+                                    <tr><td colspan="8" class="text-center">Đang tải dữ liệu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/js/admin-layout.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Sidebar toggle logic is handled in admin-layout.js now, but we can keep it here if it doesn't conflict.
+            // Actually admin-layout.js has it. Let's remove it from here to avoid duplicate binding if possible,
+            // or just leave it as it's harmless (jQuery .on adds multiple listeners).
+            // To be clean, let's remove the duplicate toggle since admin-layout.js handles it.
+            // But wait, admin-layout.js is loaded AFTER.
+            
+            // Load Books from API
+            loadBooks();
+        });
+
+        function loadBooks() {
+            $.ajax({
+                url: '/api/v1/books',
+                type: 'GET',
+                success: function(books) {
+                    const tbody = $('#booksTable tbody');
+                    tbody.empty();
+                    
+                    if (!books || books.length === 0) {
+                        tbody.append('<tr><td colspan="8" class="text-center text-muted">Chưa có sách nào.</td></tr>');
+                        return;
+                    }
+
+                    books.forEach(book => {
+                        const priceFormatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(book.price);
+                        const imageUrl = book.imageUrl ? book.imageUrl : 'https://via.placeholder.com/100';
+                        
+                        const row = `
+                            <tr>
+                                <td>${book.id}</td>
+                                <td>
+                                    <img src="${imageUrl}" alt="Book Image" class="img-thumbnail" style="max-height: 80px;">
+                                </td>
+                                <td class="fw-bold">${book.title}</td>
+                                <td>${book.author}</td>
+                                <td>${priceFormatted}</td>
+                                <td>${book.quantity}</td>
+                                <td>${book.category}</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="/admin/book-form.html?id=${book.id}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> Sửa
+                                        </a>
+                                        <button onclick="deleteBook(${book.id})" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                },
+                error: function(err) {
+                    console.error('Error loading books:', err);
+                    $('#booksTable tbody').html('<tr><td colspan="8" class="text-center text-danger">Lỗi khi tải dữ liệu. Vui lòng thử lại.</td></tr>');
+                }
+            });
+        }
+
+        function deleteBook(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa sách này?')) {
+                $.ajax({
+                    url: '/api/v1/books/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        alert('Xóa thành công!');
+                        loadBooks();
+                    },
+                    error: function() {
+                        alert('Xóa thất bại. Vui lòng thử lại.');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

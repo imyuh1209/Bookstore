@@ -29,6 +29,16 @@ public class Role implements GrantedAuthority {
     @lombok.EqualsAndHashCode.Exclude
     private List<User> users;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "role_permission",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    @lombok.ToString.Exclude
+    @lombok.EqualsAndHashCode.Exclude
+    private List<Permission> permissions;
+
     @Override
     public String getAuthority() {
         return name;

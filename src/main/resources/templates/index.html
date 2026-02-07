@@ -2,10 +2,126 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{book/layout :: layout(~{::body})}">
 <body>
-    <div class="container text-center mt-5">
-        <h1>Chào mừng đến với Ứng Dụng Quản Lý Sách</h1>
-        <p class="lead">Nơi duy nhất đáp ứng mọi nhu cầu đọc sách của bạn.</p>
-        <a href="/books" class="btn btn-primary btn-lg">Duyệt Sách</a>
+    <!-- Banner Carousel -->
+    <div id="homeCarousel" class="carousel slide shadow-sm mb-5" data-bs-ride="carousel" th:if="${not #lists.isEmpty(banners)}" data-aos="fade-down" data-aos-duration="1500">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#homeCarousel" th:each="banner, iterStat : ${banners}"
+                    th:data-bs-slide-to="${iterStat.index}" th:classappend="${iterStat.index == 0} ? 'active' : ''"
+                    aria-current="true" th:aria-label="'Slide ' + ${iterStat.count}"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item" th:each="banner, iterStat : ${banners}" th:classappend="${iterStat.index == 0} ? 'active' : ''">
+                <a th:href="${banner.linkUrl != null ? banner.linkUrl : '#'}" class="d-block w-100">
+                    <img th:src="${banner.imageUrl}" class="d-block w-100" th:alt="${banner.title}"
+                         style="height: 500px; object-fit: cover;">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h2 class="fw-bold" th:text="${banner.title}">Title</h2>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
     </div>
+
+    <!-- Fallback Hero Section if no banners -->
+    <div class="bg-primary text-white py-5 mb-5 text-center" th:if="${#lists.isEmpty(banners)}" data-aos="fade-down" data-aos-duration="1500">
+        <div class="container">
+            <h1 class="display-3 fw-bold">Chào Mừng Đến Với BookStore</h1>
+            <p class="lead mb-4">Khám phá hàng ngàn đầu sách hấp dẫn ngay hôm nay!</p>
+            <a href="/books" class="btn btn-light btn-lg px-5 rounded-pill">Mua Sắm Ngay</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Features Section -->
+        <div class="row text-center mb-5 g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="p-4 border rounded shadow-sm h-100 bg-light">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                    <h4>Giao Hàng Nhanh</h4>
+                    <p class="text-muted">Nhận sách trong vòng 24h tại nội thành.</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="p-4 border rounded shadow-sm h-100 bg-light">
+                    <i class="fas fa-book-open fa-3x text-success mb-3"></i>
+                    <h4>Sách Chính Hãng</h4>
+                    <p class="text-muted">Cam kết 100% sách thật từ nhà xuất bản.</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="p-4 border rounded shadow-sm h-100 bg-light">
+                    <i class="fas fa-headset fa-3x text-warning mb-3"></i>
+                    <h4>Hỗ Trợ 24/7</h4>
+                    <p class="text-muted">Đội ngũ hỗ trợ luôn sẵn sàng giải đáp.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Categories -->
+        <section class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2" data-aos="fade-right">
+                <h2 class="fw-bold text-uppercase text-primary section-title"><i class="fas fa-tags me-2"></i>Danh Mục Nổi Bật</h2>
+            </div>
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+                <div class="col" th:each="category, stat : ${categories}" data-aos="zoom-in" th:data-aos-delay="${stat.count * 100}">
+                    <a th:href="@{/books(category=${category.id})}" class="text-decoration-none text-dark">
+                        <div class="card h-100 shadow-sm hover-shadow text-center p-3 border-0 bg-light">
+                            <div class="card-body">
+                                <i class="fas fa-book fa-2x text-secondary mb-2"></i>
+                                <h5 class="card-title fw-bold" th:text="${category.name}">Category Name</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Books -->
+        <section class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2" data-aos="fade-right">
+                <h2 class="fw-bold text-uppercase text-danger section-title"><i class="fas fa-fire me-2"></i>Sách Mới & Hot</h2>
+                <a href="/books" class="btn btn-outline-danger rounded-pill">Xem Tất Cả <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                <div class="col" th:each="book, stat : ${books}" data-aos="fade-up" th:data-aos-delay="${stat.count * 100}">
+                    <div class="card h-100 shadow-sm border-0 position-relative">
+                        <div class="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 m-2 rounded small" style="z-index: 1;">New</div>
+                        <a th:href="@{/books/{id}(id=${book.id})}">
+                            <img th:src="${book.imageUrl != null ? book.imageUrl : 'https://via.placeholder.com/300x450'}" 
+                                 class="card-img-top" th:alt="${book.title}" 
+                                 style="height: 300px; object-fit: cover;">
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-truncate" th:text="${book.title}" th:title="${book.title}">Title</h5>
+                            <p class="card-text text-muted small mb-2" th:text="${book.author}">Author</p>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary fs-5" th:text="${#numbers.formatDecimal(book.price, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                                <a th:href="@{/cart/add/{id}(id=${book.id})}" class="btn btn-sm btn-outline-primary rounded-circle" title="Thêm vào giỏ">
+                                    <i class="bi bi-cart-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    
+    <style>
+        .hover-shadow:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        }
+    </style>
 </body>
 </html>

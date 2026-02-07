@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đơn Hàng - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/admin-style.css">
+    <style>
+        .status-badge {
+            font-size: 0.85em;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Panel</h3>
+            </div>
+            <!-- Menu will be loaded by admin-layout.js -->
+            <div class="text-center mt-5">
+                <div class="spinner-border text-light" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-dark">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="ms-auto d-flex align-items-center">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1"></i> <span>Admin</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/">Trang chủ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="/logout" method="post" class="d-inline">
+                                        <button class="dropdown-item text-danger" type="submit">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Quản Lý Đơn Hàng</h2>
+                    <button class="btn btn-outline-primary" onclick="loadOrders()"><i class="bi bi-arrow-clockwise me-1"></i> Làm mới</button>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle" id="ordersTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Ngày Đặt</th>
+                                        <th>Tổng Tiền</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chi Tiết Đơn Hàng #<span id="modalOrderId"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Khách hàng:</strong> <span id="modalUser"></span></p>
+                            <p><strong>Ngày đặt:</strong> <span id="modalDate"></span></p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p><strong>Tổng tiền:</strong> <span id="modalTotal" class="text-danger fw-bold fs-5"></span></p>
+                            <div class="mb-2">
+                                <label for="modalStatus" class="form-label fw-bold me-2">Trạng thái:</label>
+                                <select class="form-select d-inline-block w-auto" id="modalStatus">
+                                    <option value="PENDING">Chờ xác nhận</option>
+                                    <option value="SHIPPING">Đang giao hàng</option>
+                                    <option value="DELIVERED">Đã giao hàng</option>
+                                    <option value="CANCELLED">Đã huỷ</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mb-3">Danh sách sản phẩm</h6>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalItems"></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-danger" onclick="cancelCurrentOrder()">Huỷ Đơn</button>
+                    <button type="button" class="btn btn-primary" onclick="saveOrderStatus()">Cập nhật Trạng Thái</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/js/admin-layout.js"></script>
+    <script>
+        let currentOrderId = null;
+
+        $(document).ready(function() {
+            loadOrders();
+        });
+
+        function loadOrders() {
+            $.ajax({
+                url: '/api/v1/admin/orders',
+                type: 'GET',
+                success: function(orders) {
+                    const tbody = $('#ordersTable tbody');
+                    tbody.empty();
+                    
+                    if (orders.length === 0) {
+                        tbody.append('<tr><td colspan="6" class="text-center py-4">Chưa có đơn hàng nào</td></tr>');
+                        return;
+                    }
+
+                    orders.forEach(order => {
+                        let badgeClass = 'bg-secondary';
+                        if (order.status === 'PENDING') badgeClass = 'bg-warning text-dark';
+                        else if (order.status === 'SHIPPING') badgeClass = 'bg-info text-dark';
+                        else if (order.status === 'DELIVERED') badgeClass = 'bg-success';
+                        else if (order.status === 'CANCELLED') badgeClass = 'bg-danger';
+
+                        const row = `
+                            <tr>
+                                <td class="fw-bold">#${order.id}</td>
+                                <td>${order.username}</td>
+                                <td>${formatDate(order.date)}</td>
+                                <td class="text-danger fw-bold">${formatCurrency(order.totalPrice)}</td>
+                                <td><span class="badge ${badgeClass} status-badge">${order.statusLabel}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewOrder(${order.id})">
+                                        <i class="bi bi-eye"></i> Chi tiết
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                },
+                error: function(err) {
+                    console.error('Error loading orders:', err);
+                    alert('Không thể tải danh sách đơn hàng');
+                }
+            });
+        }
+
+        function viewOrder(id) {
+            currentOrderId = id;
+            $.ajax({
+                url: `/api/v1/admin/orders/${id}`,
+                type: 'GET',
+                success: function(order) {
+                    $('#modalOrderId').text(order.id);
+                    $('#modalUser').text(order.username);
+                    $('#modalDate').text(formatDate(order.date));
+                    $('#modalTotal').text(formatCurrency(order.totalPrice));
+                    $('#modalStatus').val(order.status);
+                    
+                    const itemsBody = $('#modalItems');
+                    itemsBody.empty();
+                    
+                    order.items.forEach(item => {
+                        itemsBody.append(`
+                            <tr>
+                                <td>${item.bookTitle}</td>
+                                <td class="text-center">${item.quantity}</td>
+                                <td class="text-end">${formatCurrency(item.price)}</td>
+                                <td class="text-end fw-bold">${formatCurrency(item.price * item.quantity)}</td>
+                            </tr>
+                        `);
+                    });
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+                    modal.show();
+                },
+                error: function(err) {
+                    console.error('Error loading order details:', err);
+                    alert('Không thể tải chi tiết đơn hàng');
+                }
+            });
+        }
+
+        function saveOrderStatus() {
+            if (!currentOrderId) return;
+            const newStatus = $('#modalStatus').val();
+            
+            $.ajax({
+                url: `/api/v1/admin/orders/${currentOrderId}/status`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ status: newStatus }),
+                success: function() {
+                    bootstrap.Modal.getInstance(document.getElementById('orderDetailModal')).hide();
+                    loadOrders();
+                    alert('Cập nhật trạng thái thành công!');
+                },
+                error: function(err) {
+                    console.error('Error updating status:', err);
+                    alert('Cập nhật thất bại: ' + (err.responseText || 'Lỗi không xác định'));
+                }
+            });
+        }
+
+        function cancelCurrentOrder() {
+            if (!currentOrderId) return;
+            if (!confirm('Bạn có chắc chắn muốn huỷ đơn hàng này không?')) return;
+
+            $.ajax({
+                url: `/api/v1/admin/orders/${currentOrderId}/cancel`,
+                type: 'PUT',
+                success: function() {
+                    bootstrap.Modal.getInstance(document.getElementById('orderDetailModal')).hide();
+                    loadOrders();
+                    alert('Đã huỷ đơn hàng thành công!');
+                },
+                error: function(err) {
+                    console.error('Error cancelling order:', err);
+                    alert('Huỷ đơn thất bại');
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            // Basic format assumption, adjust as needed
+            return dateString.replace('T', ' ').substring(0, 16);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+    </script>
+</body>
+</html>

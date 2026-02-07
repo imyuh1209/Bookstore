@@ -1,8 +1,10 @@
 package fit.hutech.Huy.controllers;
 
 import fit.hutech.Huy.entities.Book;
+import fit.hutech.Huy.services.BannerService;
 import fit.hutech.Huy.services.BookService;
 import fit.hutech.Huy.services.CategoryService;
+import fit.hutech.Huy.services.StorageService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +25,8 @@ public class BookController {
 
     private final BookService bookService;
     private final CategoryService categoryService;
+    private final BannerService bannerService;
+    private final StorageService storageService;
 
     @GetMapping
     public String showAllBooks(
@@ -31,6 +36,7 @@ public class BookController {
             Model model) {
         Page<Book> page = bookService.getAllBooksPage(pageNo, pageSize, sortBy);
         model.addAttribute("books", page.getContent());
+        model.addAttribute("banners", bannerService.getActiveBanners());
         model.addAttribute("currentPage", pageNo);
         model.addAttribute("totalPages", page.getTotalPages());
         model.addAttribute("totalItems", page.getTotalElements());
@@ -49,6 +55,16 @@ public class BookController {
         return "book/list";
     }
 
+    @GetMapping("/{id}")
+    public String getBookDetail(@PathVariable Long id, Model model) {
+        Optional<Book> book = bookService.getBookById(id);
+        if (book.isPresent()) {
+            model.addAttribute("book", book.get());
+            return "book/detail";
+        }
+        return "redirect:/books";
+    }
+
     @GetMapping("/add")
     public String addBookForm(Model model) {
         model.addAttribute("book", new Book());
@@ -57,10 +73,16 @@ public class BookController {
     }
 
     @PostMapping("/add")
-    public String addBook(@Valid @ModelAttribute("book") Book book, BindingResult result, Model model) {
+    public String addBook(@Valid @ModelAttribute("book") Book book, BindingResult result, 
+                          @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                          Model model) {
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategories());
             return "book/add";
+        }
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = storageService.store(imageFile, "Books");
+            book.setImageUrl(imageUrl);
         }
         bookService.addBook(book);
         return "redirect:/books";
@@ -78,10 +100,22 @@ public class BookController {
     }
 
     @PostMapping("/edit")
-    public String editBook(@Valid @ModelAttribute("book") Book book, BindingResult result, Model model) {
+    public String editBook(@Valid @ModelAttribute("book") Book book, BindingResult result,
+                           @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                           Model model) {
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategories());
             return "book/edit";
+        }
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = storageService.store(imageFile, "Books");
+            book.setImageUrl(imageUrl);
+        } else {
+            // Keep existing image if no new file is uploaded
+            // Note: This requires the hidden input field for imageUrl in the edit form to work correctly
+            // If the form submits the old imageUrl, we are fine.
+            // If not, we might overwrite it with null if we rely on @ModelAttribute binding alone without hidden input.
+            // But usually @ModelAttribute binds what's in the form. If hidden input is there, it's bound.
         }
         bookService.updateBook(book);
         return "redirect:/books";

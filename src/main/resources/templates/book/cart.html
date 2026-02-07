@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{book/layout :: layout(~{::body})}">
+<body>
+<div class="container mt-4">
+    <h3>Giỏ Hàng</h3>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div th:if="${cart.items.empty}" class="alert alert-info">
+        Giỏ hàng trống! <a href="/books">Tiếp tục mua sắm</a>
+    </div>
+    <div th:unless="${cart.items.empty}">
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+            <tr>
+                <th>Tên Sách</th>
+                <th>Giá</th>
+                <th>Số Lượng</th>
+                <th>Thành Tiền</th>
+                <th>Hành Động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${cart.items}">
+                <td th:text="${item.bookName}"></td>
+                <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
+                <td>
+                    <form th:action="@{/cart/update}" method="post" class="d-flex align-items-center">
+                        <input type="hidden" name="id" th:value="${item.bookId}">
+                        <input type="number" name="quantity" th:value="${item.quantity}" min="1" class="form-control me-2" style="width: 80px">
+                        <button type="submit" class="btn btn-sm btn-primary">Cập nhật</button>
+                    </form>
+                </td>
+                <td th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
+                <td>
+                    <a th:href="@{/cart/remove/{id}(id=${item.bookId})}" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa không?')">Xóa</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <h4>Tổng Tiền: <span class="text-danger" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span></h4>
+            <div>
+                <a href="/books" class="btn btn-secondary me-2">Tiếp tục mua sắm</a>
+                <a href="/cart/checkout" class="btn btn-success">Thanh Toán</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

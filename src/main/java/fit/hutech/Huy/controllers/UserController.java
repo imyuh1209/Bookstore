@@ -39,4 +39,33 @@ public class UserController {
         userService.setDefaultRole(user.getUsername());
         return "redirect:/login";
     }
+
+    @GetMapping("/profile")
+    public String profile(Model model, java.security.Principal principal) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        String username = principal.getName();
+        User user = userService.findByUsername(username).orElse(null);
+        if (user == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", user);
+        return "user/profile";
+    }
+
+    @PostMapping("/profile/update")
+    public String updateProfile(@ModelAttribute("user") User user, Model model, java.security.Principal principal) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        String username = principal.getName();
+        User existingUser = userService.findByUsername(username).orElse(null);
+        if (existingUser != null) {
+            existingUser.setEmail(user.getEmail());
+            existingUser.setPhone(user.getPhone());
+            userService.updateUser(existingUser);
+        }
+        return "redirect:/profile";
+    }
 }

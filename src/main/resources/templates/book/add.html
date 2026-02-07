@@ -7,7 +7,7 @@
             <h3>Thêm Sách Mới</h3>
         </div>
         <div class="card-body">
-            <form th:action="@{/books/add}" th:object="${book}" method="post">
+            <form th:action="@{/books/add}" th:object="${book}" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="title" class="form-label">Tên Sách</label>
                     <input type="text" class="form-control" id="title" th:field="*{title}">
@@ -24,12 +24,30 @@
                     <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
                 </div>
                 <div class="mb-3">
+                    <label for="quantity" class="form-label">Số Lượng</label>
+                    <input type="number" class="form-control" id="quantity" th:field="*{quantity}" min="0">
+                    <div class="text-danger" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
+                </div>
+                <div class="mb-3">
                     <label for="category" class="form-label">Thể Loại</label>
                     <select class="form-select" id="category" th:field="*{category}">
                         <option value="">Chọn thể loại</option>
                         <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
                     </select>
                     <div class="text-danger" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="imageFile" class="form-label">Hình Ảnh</label>
+                    <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*">
+                    <input type="hidden" id="imageUrl" th:field="*{imageUrl}">
+                    <div class="mt-2 text-muted small">Hoặc nhập URL bên dưới (nếu không upload file)</div>
+                    <input type="url" class="form-control mt-1" id="imageUrlInput" 
+                           oninput="document.getElementById('imageUrl').value = this.value" 
+                           placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    <textarea class="form-control" id="description" th:field="*{description}" rows="4"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Lưu</button>
                 <a href="/books" class="btn btn-secondary">Hủy</a>

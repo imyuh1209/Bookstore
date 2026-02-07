@@ -19,6 +19,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         log.info("Login successful for user: {}", authentication.getName());
         log.info("Authorities: {}", authentication.getAuthorities());
         
-        response.sendRedirect("/books");
+        response.sendRedirect("/");
     }
 }
