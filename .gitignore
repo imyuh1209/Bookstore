@@ -34,3 +34,19 @@ build/
 
 ### Secrets ###
 src/main/resources/application-secret.properties
+
+### OS ###
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+### Logs ###
+*.log
+logs/
+
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
