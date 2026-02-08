@@ -27,7 +27,11 @@ function updateUserDisplay(user) {
     // Try to find the user display area in top navbar
     const userSpan = $('.navbar-top .dropdown span');
     if (userSpan.length) {
-        userSpan.text(user.username);
+        let displayText = user.username;
+        if (user.roles && user.roles.length > 0) {
+            displayText += ` (${user.roles.join(', ')})`;
+        }
+        userSpan.text(displayText);
     }
 }
 
@@ -73,8 +77,8 @@ function renderSidebar(user) {
         menuHtml += `<a href="/admin/banners" class="${isActive('banner')}"><i class="bi bi-images"></i> Quản Lý Banner</a>`;
     }
 
-    // Quản Lý Đơn Hàng (ADMIN or BookManage)
-    if (isAdmin || isBookManage) {
+    // Quản Lý Đơn Hàng (ADMIN only) - Explicitly requested to exclude BookManage
+    if (isAdmin) {
         menuHtml += `<a href="/admin/orders" class="${isActive('order')}"><i class="bi bi-cart-check"></i> Quản Lý Đơn Hàng</a>`;
     }
 

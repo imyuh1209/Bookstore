@@ -4,6 +4,7 @@
       th:replace="~{book/layout :: layout(~{::body})}">
 <body>
     <div class="container mt-5 mb-5">
+        <div id="alert-container"></div>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/books">Trang chủ</a></li>
@@ -48,9 +49,31 @@
 
     <script>
         function addToCart(bookId) {
-             // Placeholder for cart functionality
-             alert('Đã thêm sản phẩm vào giỏ hàng!');
-             // In real app: fetch('/cart/add/' + bookId)...
+            fetch('/cart/add/' + bookId)
+                .then(response => {
+                    if (response.ok) {
+                        showAlert('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                    } else {
+                        showAlert('Lỗi khi thêm vào giỏ hàng', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Lỗi kết nối', 'danger');
+                });
+        }
+
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
         }
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Sách</title>
+    <title>Bookstore</title>
     <!-- Bootstrap CSS -->
     <link th:href="@{/webjars/bootstrap/5.3.0/css/bootstrap.min.css}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -29,7 +29,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/books">
-                <i class="bi bi-book-half me-2"></i>BookStore
+                <i class="bi bi-book-half me-2"></i>    Bookstore
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -87,61 +87,18 @@
     </div>
 
     <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
-                    <h5 class="text-uppercase mb-4">BookStore</h5>
-                    <p>
-                        Nơi hội tụ những đầu sách hay nhất, chất lượng nhất dành cho bạn. Khám phá tri thức, mở mang tầm nhìn.
-                    </p>
-                    <div class="mt-4">
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="bi bi-twitter"></i></a>
-                    </div>
-                </div>
-
-                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
-                    <h5 class="text-uppercase mb-4">Liên Kết</h5>
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2"><a href="/">Trang Chủ</a></li>
-                        <li class="mb-2"><a href="/books">Sách</a></li>
-                        <li class="mb-2"><a href="#">Tin Tức</a></li>
-                        <li><a href="#">Liên Hệ</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
-                    <h5 class="text-uppercase mb-4">Hỗ Trợ</h5>
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2"><a href="#">Chính Sách Đổi Trả</a></li>
-                        <li class="mb-2"><a href="#">Chính Sách Bảo Mật</a></li>
-                        <li class="mb-2"><a href="#">Điều Khoản Sử Dụng</a></li>
-                        <li><a href="#">Câu Hỏi Thường Gặp</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
-                    <h5 class="text-uppercase mb-4">Liên Hệ</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="bi bi-geo-alt me-2"></i> 475A Điện Biên Phủ, TP.HCM</li>
-                        <li class="mb-2"><i class="bi bi-envelope me-2"></i> contact@bookstore.com</li>
-                        <li><i class="bi bi-telephone me-2"></i> +84 123 456 789</li>
-                    </ul>
-                </div>
+        <div class="container py-4">
+            <div class="text-center">
+                <h5 class="text-uppercase mb-3">Bookstore</h5>
+                <p class="mb-0">
+                    Nơi hội tụ những đầu sách hay nhất, chất lượng nhất dành cho bạn. Khám phá tri thức, mở mang tầm nhìn.
+                </p>
             </div>
             
-            <hr>
+            <hr class="my-4">
             
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <div class="mb-2 mb-md-0">
-                    © 2026 Copyright: <a class="text-white fw-bold" href="#">BookStore.com</a>
-                </div>
-                <div>
-                    <i class="bi bi-credit-card-2-front fs-4 me-2"></i>
-                    <i class="bi bi-paypal fs-4 me-2"></i>
-                    <i class="bi bi-cash-coin fs-4"></i>
-                </div>
+            <div class="text-center">
+                © 2026 Copyright: <a class="text-white fw-bold" href="#">Bookstore.com</a>
             </div>
         </div>
     </footer>
@@ -160,6 +117,17 @@
         // Preloader Logic
         window.addEventListener('load', function() {
             const preloader = document.getElementById('preloader');
+            
+            // Check if intro has been shown in this session
+            if (sessionStorage.getItem('introShown')) {
+                preloader.style.display = 'none';
+                AOS.refresh();
+                return;
+            }
+
+            // Mark as shown
+            sessionStorage.setItem('introShown', 'true');
+
             setTimeout(() => {
                 preloader.style.opacity = '0';
                 setTimeout(() => {

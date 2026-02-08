@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>fit.hutech</groupId>
-	<artifactId>Huy</artifactId>
+	<artifactId>TruongGiaHuy</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>BookManage</name>
-	<description>Thực hành lập trình Java</description>
+	<name>TruongGiaHuy</name>
+	<description>Dự án cá nhân Trương Gia Huy</description>
 	<url/>
 	<licenses>
 		<license/>

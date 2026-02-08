@@ -129,8 +129,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="button" class="btn btn-danger" onclick="cancelCurrentOrder()">Huỷ Đơn</button>
-                    <button type="button" class="btn btn-primary" onclick="saveOrderStatus()">Cập nhật Trạng Thái</button>
+                    <button type="button" class="btn btn-danger" id="btnCancelOrder" onclick="cancelCurrentOrder()">Huỷ Đơn</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveStatus" onclick="saveOrderStatus()">Cập nhật Trạng Thái</button>
                 </div>
             </div>
         </div>
@@ -177,6 +177,9 @@
                                     <button class="btn btn-sm btn-primary" onclick="viewOrder(${order.id})">
                                         <i class="bi bi-eye"></i> Chi tiết
                                     </button>
+                                    <button class="btn btn-sm btn-danger ms-1" onclick="deleteOrder(${order.id})">
+                                        <i class="bi bi-trash"></i> Xoá
+                                    </button>
                                 </td>
                             </tr>
                         `;
@@ -201,6 +204,17 @@
                     $('#modalDate').text(formatDate(order.date));
                     $('#modalTotal').text(formatCurrency(order.totalPrice));
                     $('#modalStatus').val(order.status);
+                    
+                    // Disable controls if order is CANCELLED
+                    if (order.status === 'CANCELLED') {
+                        $('#modalStatus').prop('disabled', true);
+                        $('#btnSaveStatus').prop('disabled', true);
+                        $('#btnCancelOrder').prop('disabled', true);
+                    } else {
+                        $('#modalStatus').prop('disabled', false);
+                        $('#btnSaveStatus').prop('disabled', false);
+                        $('#btnCancelOrder').prop('disabled', false);
+                    }
                     
                     const itemsBody = $('#modalItems');
                     itemsBody.empty();
@@ -262,6 +276,25 @@
                 error: function(err) {
                     console.error('Error cancelling order:', err);
                     alert('Huỷ đơn thất bại');
+                }
+            });
+        }
+
+        function deleteOrder(id) {
+            if (!confirm('Bạn có chắc chắn muốn xoá đơn hàng này không? Hành động này không thể hoàn tác!')) return;
+            
+            $.ajax({
+                url: `/api/v1/admin/orders/${id}`,
+                type: 'DELETE',
+                success: function() {
+                    // Close modal if open (though delete button is in table, user might delete from modal if we add it there later)
+                    // For now, just reload table
+                    loadOrders();
+                    alert('Đã xoá đơn hàng thành công!');
+                },
+                error: function(err) {
+                    console.error('Error deleting order:', err);
+                    alert('Xoá đơn thất bại');
                 }
             });
         }

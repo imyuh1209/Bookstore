@@ -28,14 +28,15 @@
                     <div class="card-body">
                         <p class="mb-2"><strong><i class="bi bi-calendar-event me-2"></i>Ngày đặt:</strong> <span th:text="${#dates.format(invoice.invoiceDate, 'dd-MM-yyyy HH:mm')}"></span></p>
                         <p class="mb-2"><strong><i class="bi bi-info-circle me-2"></i>Trạng thái:</strong> 
-                            <span th:if="${invoice.status.name() == 'PENDING'}" class="badge bg-warning text-dark" th:text="${invoice.status.label}"></span>
-                            <span th:if="${invoice.status.name() == 'SHIPPING'}" class="badge bg-info text-dark" th:text="${invoice.status.label}"></span>
-                            <span th:if="${invoice.status.name() == 'DELIVERED'}" class="badge bg-success" th:text="${invoice.status.label}"></span>
-                            <span th:if="${invoice.status.name() == 'CANCELLED'}" class="badge bg-danger" th:text="${invoice.status.label}"></span>
+                            <span th:if="${invoice.status != null && invoice.status.name() == 'PENDING'}" class="badge bg-warning text-dark" th:text="${invoice.status.label}"></span>
+                            <span th:if="${invoice.status != null && invoice.status.name() == 'SHIPPING'}" class="badge bg-info text-dark" th:text="${invoice.status.label}"></span>
+                            <span th:if="${invoice.status != null && invoice.status.name() == 'DELIVERED'}" class="badge bg-success" th:text="${invoice.status.label}"></span>
+                            <span th:if="${invoice.status != null && invoice.status.name() == 'CANCELLED'}" class="badge bg-danger" th:text="${invoice.status.label}"></span>
+                            <span th:if="${invoice.status == null}" class="badge bg-secondary">Không xác định</span>
                         </p>
                         <p class="mb-3"><strong><i class="bi bi-cash-stack me-2"></i>Tổng tiền:</strong> <span class="text-danger fw-bold fs-5" th:text="${#numbers.formatDecimal(invoice.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span></p>
                         
-                        <div th:if="${invoice.status.name() == 'PENDING'}" class="d-grid">
+                        <div th:if="${invoice.status == null || invoice.status.name() == 'PENDING'}" class="d-grid">
                             <form th:action="@{/orders/{id}/cancel(id=${invoice.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn huỷ đơn hàng này không?');">
                                 <button type="submit" class="btn btn-outline-danger w-100"><i class="bi bi-x-circle me-2"></i>Huỷ Đơn Hàng</button>
                             </form>
